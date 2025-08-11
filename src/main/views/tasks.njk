@@ -1,20 +1,49 @@
 {% extends "layout.njk" %}
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
 {% set pageTitle = "Tasks" %}
 
 {% block content %}
-<div class="govuk-width-container">
-  <h1 class="govuk-heading-l">Tasks</h1>
+  <span class="govuk-caption-l">beta This is a test service.</span>
+  <h1 class="govuk-heading-xl">Tasks</h1>
+  <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
 
   {% if tasks and tasks.length %}
-    <ul class="govuk-list govuk-list--bullet">
-      {% for t in tasks %}
-        <li>
-          <strong>{{ t.title }}</strong> – {{ t.status }} ({{ t.caseNumber }})
-        </li>
-      {% endfor %}
-    </ul>
+    {% for t in tasks %}
+      {% if t.status == "COMPLETED" or t.status == "DONE" %}
+        {% set tagClass = "govuk-tag--green" %}
+      {% elif t.status == "IN_PROGRESS" %}
+        {% set tagClass = "govuk-tag--blue" %}
+      {% else %}
+        {% set tagClass = "govuk-tag--grey" %}
+      {% endif %}
+
+      {{ govukSummaryList({
+        classes: "govuk-!-margin-bottom-6",
+        rows: [
+          { key: { text: "Title" },       value: { text: t.title } },
+          { key: { text: "Case number" }, value: { text: t.caseNumber or "—" } },
+          { key: { text: "Due" },         value: { text: t.dueDate or "—" } },
+          { key: { text: "Status" },      value: { html: govukTag({ text: t.status, classes: tagClass }) } },
+          { key: { text: "Actions" },     value: {
+              html:
+                '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
+                ' &nbsp;|&nbsp; ' ~
+                '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
+                ' &nbsp;|&nbsp; ' ~
+                '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
+            }
+          }
+        ]
+      }) }}
+    {% endfor %}
   {% else %}
-    <p class="govuk-body">No tasks yet.</p>
+    <p class="govuk-body">No tasks found.</p>
   {% endif %}
-</div>
+
+  <div class="govuk-!-margin-top-6">
+    {{ govukButton({ text: "Create a task", href: "/tasks/new" }) }}
+  </div>
 {% endblock %}

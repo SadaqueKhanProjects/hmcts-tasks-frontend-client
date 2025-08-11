@@ -1,11 +1,15 @@
 {% extends "layout.njk" %}
-{% set pageTitle = "Home" %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% block pageTitle %}Welcome – HMCTS Tasks{% endblock %}
 
 {% block content %}
-<div class="govuk-width-container">
-  <h1 class="govuk-heading-l">Welcome</h1>
-  <p class="govuk-body">
-    Go to your <a class="govuk-link" href="/tasks">tasks list</a>.
-  </p>
-</div>
+  <h1 class="govuk-heading-xl">Welcome</h1>
+  <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
+
+  {{ govukButton({
+    text: "View tasks",
+    href: "/tasks",
+    isStartButton: true
+  }) }}
 {% endblock %}
