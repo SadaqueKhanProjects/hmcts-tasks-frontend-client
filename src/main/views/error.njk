@@ -1,21 +1,27 @@
 {% extends "govuk/template.njk" %}
 
-{% block pageTitle %}Error – HMCTS{% endblock %}
+{% block pageTitle %}
+  Error – {{ serviceName or "HMCTS Service" }}
+{% endblock %}
 
 {% block content %}
-  <div class="govuk-width-container">
-    <main class="govuk-main-wrapper" id="main-content" role="main">
-      <h1 class="govuk-heading-l">Sorry, something went wrong</h1>
+<div class="govuk-width-container">
+  <main class="govuk-main-wrapper" id="main-content" role="main">
+    <h1 class="govuk-heading-l">Sorry, there is a problem with the service</h1>
 
-      {% if message %}
-        <p class="govuk-body">{{ message }}</p>
-      {% else %}
-        <p class="govuk-body">Please try again in a moment.</p>
-      {% endif %}
+    {% if message %}
+      <p class="govuk-body">{{ message }}</p>
+    {% else %}
+      <p class="govuk-body">Please try again later.</p>
+    {% endif %}
 
-      <p class="govuk-body">
-        <a class="govuk-link" href="/">Go back home</a>
-      </p>
-    </main>
-  </div>
+    {% if error and ENV == 'development' %}
+      <pre class="govuk-body">{{ error | dump }}</pre>
+    {% endif %}
+
+    <p class="govuk-body">
+      <a class="govuk-link" href="/">Go back to the homepage</a>
+    </p>
+  </main>
+</div>
 {% endblock %}

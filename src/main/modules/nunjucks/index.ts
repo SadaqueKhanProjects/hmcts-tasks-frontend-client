@@ -1,29 +1,35 @@
-import path from 'path';
-import nunjucks from 'nunjucks';
+// src/main/modules/nunjucks/index.ts
 import type { Application } from 'express';
+import nunjucks from 'nunjucks';
+import path from 'path';
 
 export class Nunjucks {
   constructor(private readonly isDev: boolean) { }
 
   enableFor(app: Application): void {
-    // Directories Nunjucks should search for templates
+    // All the places Nunjucks should look for templates/macros
     const viewPaths = [
-      // Your app templates (src/main/views)
-      path.resolve(__dirname, '..', '..', 'views'),
-
-      // GOV.UK Frontend templates so `{% extends "govuk/template.njk" %}` works
+      // compiled/ts-node path
+      path.resolve(__dirname, '..', 'views'),
+      // source path (helps when running via ts-node)
+      path.resolve(process.cwd(), 'src', 'main', 'views'),
+      // GOV.UK macros (e.g. govuk-frontend/govuk/components/.../macro.njk)
       path.resolve(process.cwd(), 'node_modules', 'govuk-frontend'),
     ];
 
-    app.set('view engine', 'njk');
+    // Tell Express about all view paths
     app.set('views', viewPaths);
+    app.set('view engine', 'njk');
 
-    // Configure Nunjucks for Express (no unused local var)
-    nunjucks.configure(viewPaths, {
+    const env = nunjucks.configure(viewPaths, {
       autoescape: true,
-      watch: this.isDev,
       noCache: this.isDev,
+      watch: this.isDev,
       express: app,
     });
+
+    // Handy globals for templates
+    env.addGlobal('serviceName', process.env.SERVICE_NAME || 'HMCTS Tasks');
+    env.addGlobal('ENV', process.env.NODE_ENV || 'development');
   }
 }

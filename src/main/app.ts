@@ -1,5 +1,5 @@
 // src/main/app.ts
-import 'dotenv/config'; // Load .env before anything else
+import 'dotenv/config';
 import * as path from 'path';
 
 import { HTTPError } from './HttpError';
@@ -18,43 +18,46 @@ const developmentMode = env === 'development';
 export const app = express();
 app.locals.ENV = env;
 
-// Trust proxy (useful behind reverse proxies / dev tools)
+// Trust proxy if running behind one
 app.set('trust proxy', true);
 
-// Nunjucks (kept as per scaffold)
+// View engine (Nunjucks with GOV.UK paths)
 new Nunjucks(developmentMode).enableFor(app);
 
-// Static + common middleware
+// Static assets (webpack outputs here)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Common middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
   next();
 });
 
-// Auto‑register routes from src/main/routes (works in ts-node and compiled JS)
+// Auto‑register routes from src/main/routes
 glob
   .sync(path.join(__dirname, 'routes', '**/*.+(ts|js)'))
   .map(filename => require(filename))
   .forEach(route => route.default(app));
 
-// Dev helpers (webpack etc.)
+// Webpack/dev helpers
 setupDev(app, developmentMode);
 
-// 404 for unmatched routes (optional but helpful)
-app.use((req, res) => {
+// 404 catch‑all (render our error page)
+app.use((_req, res) => {
   res.status(404);
-  res.render('error', { message: 'Not Found', error: developmentMode ? {} : undefined });
+  res.render('error.njk', { message: 'Not found' });
 });
 
-// Error handler (must have 4 args for Express to recognise it)
-app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+// Error handler (must have 4 args)
+app.use((err: HTTPError, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   // eslint-disable-next-line no-console
   console.error(err);
-  res.locals.message = err.message;
-  res.locals.error = developmentMode ? err : {};
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error.njk', {
+    message: err.message || 'Something went wrong',
+    error: developmentMode ? err : undefined,
+  });
 });
