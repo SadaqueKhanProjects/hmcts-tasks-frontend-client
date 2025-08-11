@@ -1,0 +1,36 @@
+{% extends "govuk/template.njk" %}
+
+{% from "govuk/components/header/macro.njk" import govukHeader %}
+{% from "govuk/components/footer/macro.njk" import govukFooter %}
+{% from "govuk/components/phase-banner/macro.njk" import govukPhaseBanner %}
+
+{% block htmlLang %}en{% endblock %}
+{% block pageTitle %}{% if pageTitle %}{{ pageTitle }} - {% endif %}HMCTS Tasks{% endblock %}
+
+{% block head %}
+  <link rel="stylesheet" href="/assets/main-dev.css">
+{% endblock %}
+
+{% block header %}
+  {{ govukHeader({
+    serviceName: "HMCTS Tasks",
+    serviceUrl: "/"
+  }) }}
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukPhaseBanner({
+    tag: { text: "beta" },
+    html: "This is a test service."
+  }) }}
+{% endblock %}
+
+{% block content %}{% endblock %}
+
+{% block bodyEnd %}
+  <script src="/assets/main-dev.js"></script>
+{% endblock %}
+
+{% block footer %}
+  {{ govukFooter({}) }}
+{% endblock %}

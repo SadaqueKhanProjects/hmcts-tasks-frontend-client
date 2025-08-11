@@ -1,5 +1,21 @@
-{% extends "template.njk" %}
+{% extends "govuk/template.njk" %}
+
+{% block pageTitle %}Error – HMCTS{% endblock %}
 
 {% block content %}
-  <h1 class="govuk-heading-xl">Something went wrong</h1>
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="main-content" role="main">
+      <h1 class="govuk-heading-l">Sorry, something went wrong</h1>
+
+      {% if message %}
+        <p class="govuk-body">{{ message }}</p>
+      {% else %}
+        <p class="govuk-body">Please try again in a moment.</p>
+      {% endif %}
+
+      <p class="govuk-body">
+        <a class="govuk-link" href="/">Go back home</a>
+      </p>
+    </main>
+  </div>
 {% endblock %}

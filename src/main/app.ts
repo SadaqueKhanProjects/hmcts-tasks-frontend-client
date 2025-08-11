@@ -1,3 +1,5 @@
+// src/main/app.ts
+import 'dotenv/config'; // Load .env before anything else
 import * as path from 'path';
 
 import { HTTPError } from './HttpError';
@@ -7,7 +9,6 @@ import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import { glob } from 'glob';
-import favicon from 'serve-favicon';
 
 const { setupDev } = require('./development');
 
@@ -17,9 +18,13 @@ const developmentMode = env === 'development';
 export const app = express();
 app.locals.ENV = env;
 
+// Trust proxy (useful behind reverse proxies / dev tools)
+app.set('trust proxy', true);
+
+// Nunjucks (kept as per scaffold)
 new Nunjucks(developmentMode).enableFor(app);
 
-app.use(favicon(path.join(__dirname, '/public/assets/images/favicon.ico')));
+// Static + common middleware
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -29,19 +34,27 @@ app.use((req, res, next) => {
   next();
 });
 
+// Auto‑register routes from src/main/routes (works in ts-node and compiled JS)
 glob
-  .sync(__dirname + '/routes/**/*.+(ts|js)')
+  .sync(path.join(__dirname, 'routes', '**/*.+(ts|js)'))
   .map(filename => require(filename))
   .forEach(route => route.default(app));
 
+// Dev helpers (webpack etc.)
 setupDev(app, developmentMode);
 
-// error handler
-app.use((err: HTTPError, req: express.Request, res: express.Response) => {
-  console.log(err);
-  // set locals, only providing error in development
+// 404 for unmatched routes (optional but helpful)
+app.use((req, res) => {
+  res.status(404);
+  res.render('error', { message: 'Not Found', error: developmentMode ? {} : undefined });
+});
+
+// Error handler (must have 4 args for Express to recognise it)
+app.use((err: HTTPError, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  // eslint-disable-next-line no-console
+  console.error(err);
   res.locals.message = err.message;
-  res.locals.error = env === 'development' ? err : {};
+  res.locals.error = developmentMode ? err : {};
   res.status(err.status || 500);
   res.render('error');
 });
