@@ -8,7 +8,11 @@
 {% block content %}
   {% include "includes/flash-banner.njk" %}
 
-  <h1 class="govuk-heading-xl">Tasks</h1>
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h1 class="govuk-heading-xl govuk-!-margin-bottom-2" style="margin-right: auto;">Tasks</h1>
+    <a class="govuk-button" href="/tasks/new" data-module="govuk-button" style="margin-left: auto;">Create a task</a>
+  </div>
+
   <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
 
   {% if tasks and tasks.length %}
@@ -20,31 +24,29 @@
       {% else %}
         {% set tagClass = "govuk-tag--grey" %}
       {% endif %}
-
-      {{ govukSummaryList({
-        classes: "govuk-!-margin-bottom-6",
-        rows: [
-          { key: { text: "Title" },       value: { text: t.title } },
-          { key: { text: "Case number" }, value: { text: t.caseNumber or "—" } },
-          { key: { text: "Due" },         value: { text: t.displayDue } },
-          { key: { text: "Status" },      value: { html: govukTag({ text: t.status, classes: tagClass }) } },
-          { key: { text: "Actions" },     value: {
-              html:
-                '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
-                ' &nbsp;|&nbsp; ' ~
-                '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
-                ' &nbsp;|&nbsp; ' ~
-                '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
+      <div class="govuk-!-margin-bottom-4"
+           style="border:1px solid #505a5f; padding:16px; border-radius:6px;">
+        {{ govukSummaryList({
+          classes: "govuk-!-margin-bottom-0",
+          rows: [
+            { key: { text: "Title" },       value: { text: t.title } },
+            { key: { text: "Case number" }, value: { text: t.caseNumber or "—" } },
+            { key: { text: "Due" },         value: { text: t.displayDue } },
+            { key: { text: "Status" },      value: { html: govukTag({ text: t.status, classes: tagClass }) } },
+            { key: { text: "Actions" },     value: {
+                html:
+                  '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
+                  ' &nbsp;|&nbsp; ' ~
+                  '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
+                  ' &nbsp;|&nbsp; ' ~
+                  '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
+              }
             }
-          }
-        ]
-      }) }}
+          ]
+        }) }}
+      </div>
     {% endfor %}
   {% else %}
     <p class="govuk-body">No tasks found.</p>
   {% endif %}
-
-  <div class="govuk-!-margin-top-6">
-    <a class="govuk-button" href="/tasks/new" data-module="govuk-button">Create a task</a>
-  </div>
 {% endblock %}

@@ -1,0 +1,12 @@
+{% from "govuk/components/tag/macro.njk" import govukTag %}
+
+{% macro statusTag(status) -%}
+  {# Map backend statuses to GOV.UK tag classes #}
+  {% set cls = {
+    "PENDING": "govuk-tag--blue",
+    "IN_PROGRESS": "govuk-tag--yellow",
+    "COMPLETED": "govuk-tag--green"
+  }[status] or "govuk-tag" %}
+
+  {{ govukTag({ text: status | replace("_", " "), classes: cls }) }}
+{%- endmacro %}
