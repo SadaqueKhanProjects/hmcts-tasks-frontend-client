@@ -3,6 +3,16 @@ import { TasksApi, TaskStatus } from '../tasksApi';
 
 const STATUSES: TaskStatus[] = ['PENDING', 'IN_PROGRESS', 'COMPLETED'];
 
+function formatLocal(dt?: string | null): string | null {
+    if (!dt) return null;
+    const d = new Date(dt);
+    if (Number.isNaN(d.getTime())) return null;
+    return new Intl.DateTimeFormat('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: false,
+    }).format(d);
+}
+
 export default function (app: Application): void {
     const api = new TasksApi();
 
@@ -10,9 +20,16 @@ export default function (app: Application): void {
     app.get('/tasks', async (req: Request, res: Response) => {
         try {
             const tasks = await api.getAll();
+
+            // add a preformatted field for the template
+            const viewTasks = tasks.map(t => ({
+                ...t,
+                displayDue: formatLocal(t.dueDate) ?? '—',
+            }));
+
             res.render('tasks.njk', {
                 title: 'Tasks',
-                tasks,
+                tasks: viewTasks,
                 created: req.query.created,
                 updated: req.query.updated,
                 deleted: req.query.deleted,
@@ -98,7 +115,16 @@ export default function (app: Application): void {
         try {
             const id = Number(req.params.id);
             const task = await api.getById(id);
-            res.render('task-view.njk', { title: 'Task details', task });
+
+            const formattedCreated = formatLocal(task.createdDate) ?? '—';
+            const formattedDue = formatLocal(task.dueDate ?? null) ?? '—';
+
+            res.render('task-view.njk', {
+                title: 'Task details',
+                task,
+                formattedCreated,
+                formattedDue,
+            });
         } catch (e) {
             console.error(e);
             res.status(404).render('error.njk', { message: 'Task not found' });

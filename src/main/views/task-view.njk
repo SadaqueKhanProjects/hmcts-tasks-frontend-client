@@ -36,30 +36,15 @@
     }) }}
   </div>
 
-  {{ govukSummaryList({
-    rows: [
-      {
-        key: { text: "Task ID" },
-        value: { text: task.id }
-      },
-      {
-        key: { text: "Case number" },
-        value: { text: task.caseNumber }
-      },
-      {
-        key: { text: "Description" },
-        value: { html: task.description or "—" }
-      },
-      {
-        key: { text: "Created" },
-        value: { text: task.createdDate }
-      },
-      {
-        key: { text: "Due" },
-        value: { text: task.dueDate or "—" }
-      }
-    ]
-  }) }}
+{{ govukSummaryList({
+  rows: [
+    { key: { text: "Task ID" },       value: { text: task.id } },
+    { key: { text: "Case number" },   value: { text: task.caseNumber } },
+    { key: { text: "Description" },   value: { html: task.description or "—" } },
+    { key: { text: "Created" },       value: { text: formattedCreated } },
+    { key: { text: "Due" },           value: { text: formattedDue } }
+  ]
+}) }}
 
   <div class="govuk-button-group">
     {{ govukButton({

@@ -6,7 +6,6 @@
 {% set pageTitle = "Tasks" %}
 
 {% block content %}
-  {# Flash banner for created/updated/deleted states #}
   {% include "includes/flash-banner.njk" %}
 
   <h1 class="govuk-heading-xl">Tasks</h1>
@@ -27,7 +26,7 @@
         rows: [
           { key: { text: "Title" },       value: { text: t.title } },
           { key: { text: "Case number" }, value: { text: t.caseNumber or "—" } },
-          { key: { text: "Due" },         value: { text: t.dueDate or "—" } },
+          { key: { text: "Due" },         value: { text: t.displayDue } },
           { key: { text: "Status" },      value: { html: govukTag({ text: t.status, classes: tagClass }) } },
           { key: { text: "Actions" },     value: {
               html:
