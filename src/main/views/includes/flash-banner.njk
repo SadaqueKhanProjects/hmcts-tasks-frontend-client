@@ -1,0 +1,33 @@
+{# Flash banner component for showing success/error/info messages #}
+{% if created %}
+  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title">Success</h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+      <p class="govuk-notification-banner__heading">Task created successfully</p>
+    </div>
+  </div>
+{% endif %}
+
+{% if updated %}
+  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title">Success</h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+      <p class="govuk-notification-banner__heading">Task updated successfully</p>
+    </div>
+  </div>
+{% endif %}
+
+{% if errors and errors.global %}
+  <div class="govuk-notification-banner govuk-notification-banner--error" role="alert">
+    <div class="govuk-notification-banner__header">
+      <h2 class="govuk-notification-banner__title">Error</h2>
+    </div>
+    <div class="govuk-notification-banner__content">
+      <p class="govuk-notification-banner__heading">{{ errors.global }}</p>
+    </div>
+  </div>
+{% endif %}

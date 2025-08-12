@@ -1,0 +1,75 @@
+{% extends "layout.njk" %}
+{% from "govuk/components/back-link/macro.njk"   import govukBackLink %}
+{% from "govuk/components/tag/macro.njk"         import govukTag %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+{% from "govuk/components/button/macro.njk"      import govukButton %}
+
+{% block pageTitle %}Task details – {{ serviceName or "HMCTS Tasks" }}{% endblock %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back to tasks",
+    href: "/tasks"
+  }) }}
+{% endblock %}
+
+{% block content %}
+  {% include "includes/flash-banner.njk" %}
+
+  <span class="govuk-caption-m">Case {{ task.caseNumber }}</span>
+  <h1 class="govuk-heading-l govuk-!-margin-bottom-2">
+    {{ task.title }}
+  </h1>
+
+  {# Precompute the tag class instead of using a ternary in macro args #}
+  {% set tagClass = "govuk-tag--grey" %}
+  {% if task.status == "COMPLETED" %}
+    {% set tagClass = "govuk-tag--green" %}
+  {% elif task.status == "IN_PROGRESS" %}
+    {% set tagClass = "govuk-tag--blue" %}
+  {% endif %}
+
+  <div class="govuk-!-margin-bottom-6">
+    {{ govukTag({
+      text: task.status,
+      classes: tagClass
+    }) }}
+  </div>
+
+  {{ govukSummaryList({
+    rows: [
+      {
+        key: { text: "Task ID" },
+        value: { text: task.id }
+      },
+      {
+        key: { text: "Case number" },
+        value: { text: task.caseNumber }
+      },
+      {
+        key: { text: "Description" },
+        value: { html: task.description or "—" }
+      },
+      {
+        key: { text: "Created" },
+        value: { text: task.createdDate }
+      },
+      {
+        key: { text: "Due" },
+        value: { text: task.dueDate or "—" }
+      }
+    ]
+  }) }}
+
+  <div class="govuk-button-group">
+    {{ govukButton({
+      text: "Edit status",
+      href: "/tasks/" + task.id + "/edit"
+    }) }}
+    {{ govukButton({
+      text: "Back to tasks",
+      classes: "govuk-button--secondary",
+      href: "/tasks"
+    }) }}
+  </div>
+{% endblock %}
