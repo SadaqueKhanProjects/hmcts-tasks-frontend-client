@@ -1,4 +1,3 @@
-// src/main/routes/tasks.ts
 import { Application, Request, Response } from 'express';
 import { TasksApi, TaskStatus } from '../tasksApi';
 
@@ -19,7 +18,6 @@ export default function (app: Application): void {
                 deleted: req.query.deleted,
             });
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(500).render('error.njk', { message: 'Unable to load tasks' });
         }
@@ -40,16 +38,30 @@ export default function (app: Application): void {
         const { title, description, status, dueDate, caseNumber } = req.body || {};
         const errors: Record<string, string> = {};
 
-        // Basic validation
+        // Required field checks
         if (!title?.trim()) errors.title = 'Enter a title';
         if (!caseNumber?.trim()) errors.caseNumber = 'Enter a case number';
         if (!STATUSES.includes(status)) errors.status = 'Choose a valid status';
 
-        // New: word-limit validation for description (max 500 words)
+        // Description word-limit validation (max 500 words)
         const desc = typeof description === 'string' ? description : '';
         const wordCount = desc.trim() === '' ? 0 : desc.trim().split(/\s+/).length;
         if (wordCount > 500) {
             errors.description = `Keep the description to 500 words or fewer (you entered ${wordCount}).`;
+        }
+
+        // Due date validation (optional, must be today or later)
+        let isoDue: string | null = null;
+        if (dueDate) {
+            const parsed = new Date(dueDate);
+            const now = new Date();
+            if (Number.isNaN(parsed.getTime())) {
+                errors.dueDate = 'Enter a valid date and time';
+            } else if (parsed.getTime() < now.getTime()) {
+                errors.dueDate = 'Due date must be today or later';
+            } else {
+                isoDue = parsed.toISOString();
+            }
         }
 
         if (Object.keys(errors).length) {
@@ -62,8 +74,6 @@ export default function (app: Application): void {
         }
 
         try {
-            const isoDue = dueDate ? new Date(dueDate).toISOString() : null;
-
             await api.create({
                 title: title.trim(),
                 description: desc.trim() || null,
@@ -71,10 +81,8 @@ export default function (app: Application): void {
                 dueDate: isoDue,
                 caseNumber: caseNumber.trim(),
             });
-
             res.redirect('/tasks?created=1');
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(500).render('task-new.njk', {
                 title: 'Create a task',
@@ -92,7 +100,6 @@ export default function (app: Application): void {
             const task = await api.getById(id);
             res.render('task-view.njk', { title: 'Task details', task });
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(404).render('error.njk', { message: 'Task not found' });
         }
@@ -105,7 +112,6 @@ export default function (app: Application): void {
             const task = await api.getById(id);
             res.render('task-edit.njk', { title: 'Update task status', task, statuses: STATUSES, errors: {} });
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(404).render('error.njk', { message: 'Task not found' });
         }
@@ -137,7 +143,6 @@ export default function (app: Application): void {
             await api.updateStatus(id, status);
             res.redirect('/tasks?updated=1');
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             const task = await api.getById(id).catch(() => null);
             res.status(500).render('task-edit.njk', {
@@ -156,7 +161,6 @@ export default function (app: Application): void {
             const task = await api.getById(id);
             res.render('task-delete.njk', { title: 'Delete task', task });
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(404).render('error.njk', { message: 'Task not found' });
         }
@@ -169,7 +173,6 @@ export default function (app: Application): void {
             await api.delete(id);
             res.redirect('/tasks?deleted=1');
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(500).render('error.njk', { message: 'Unable to delete task' });
         }

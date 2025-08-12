@@ -46,10 +46,23 @@
         </select>
       </div>
 
-      <div class="govuk-form-group">
-        <label class="govuk-label" for="dueDate">Due date/time (optional)</label>
-        <input class="govuk-input" id="dueDate" name="dueDate" type="datetime-local" value="{{ form.dueDate | default('') }}">
-      </div>
+    {# --- replace ONLY the due date form-group with this --- #}
+<div class="govuk-form-group {% if errors and errors.dueDate %}govuk-form-group--error{% endif %}">
+  <label class="govuk-label" for="dueDate">Due date/time (optional)</label>
+  {% if errors and errors.dueDate %}
+    <p class="govuk-error-message">
+      <span class="govuk-visually-hidden">Error:</span> {{ errors.dueDate }}
+    </p>
+  {% endif %}
+  <input
+    class="govuk-input"
+    id="dueDate"
+    name="dueDate"
+    type="datetime-local"
+    value="{{ form.dueDate | default('') }}"
+  >
+  <div class="govuk-hint">Must be today or later.</div>
+</div>
 
       <button class="govuk-button" data-module="govuk-button" type="submit">Create task</button>
       <a class="govuk-link" href="/tasks">Cancel</a>
@@ -82,4 +95,18 @@
     </div>
   </div>
 </div>
+<script>
+  (function () {
+    var el = document.getElementById('dueDate');
+    if (!el) return;
+
+    // Build "YYYY-MM-DDTHH:MM" in local time, seconds = 00
+    var d = new Date();
+    d.setSeconds(0, 0);
+    var pad = function(n){ return String(n).padStart(2,'0'); };
+    var min = d.getFullYear() + '-' + pad(d.getMonth()+1) + '-' + pad(d.getDate()) +
+              'T' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    el.min = min;
+  })();
+</script>
 {% endblock %}
