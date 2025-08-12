@@ -6,6 +6,9 @@
 {% set pageTitle = "Tasks" %}
 
 {% block content %}
+  {# Flash banner for created/updated/deleted states #}
+  {% include "includes/flash-banner.njk" %}
+
   <h1 class="govuk-heading-xl">Tasks</h1>
   <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
 

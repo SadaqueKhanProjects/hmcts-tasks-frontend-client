@@ -1,0 +1,33 @@
+{% extends "layout.njk" %}
+{% from "govuk/components/warning-text/macro.njk" import govukWarningText %}
+{% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
+
+{% set pageTitle = "Delete task" %}
+
+{% block content %}
+  <a class="govuk-back-link" href="/tasks">Back</a>
+
+  <h1 class="govuk-heading-l">Delete task</h1>
+
+  {{ govukWarningText({
+    text: "This action cannot be undone.",
+    iconFallbackText: "Warning"
+  }) }}
+
+  {{ govukSummaryList({
+    rows: [
+      { key: { text: "Title" },       value: { text: task.title } },
+      { key: { text: "Case number" }, value: { text: task.caseNumber or "—" } },
+      { key: { text: "Due" },         value: { text: task.dueDate or "—" } },
+      { key: { text: "Status" },      value: { text: task.status } }
+    ]
+  }) }}
+
+  <form method="post" action="/tasks/{{ task.id }}/delete" class="govuk-!-margin-top-4">
+    {% include "csrf.njk" %}
+    <button class="govuk-button govuk-button--warning" data-module="govuk-button" type="submit">
+      Delete task
+    </button>
+    <a class="govuk-link govuk-!-margin-left-3" href="/tasks">Cancel</a>
+  </form>
+{% endblock %}

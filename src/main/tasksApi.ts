@@ -1,3 +1,4 @@
+// src/main/tasksApi.ts
 import axios from 'axios';
 
 const BASE_URL = process.env.BACKEND_URL || 'http://localhost:4000';
@@ -29,7 +30,7 @@ export class TasksApi {
         title: string;
         description?: string | null;
         status: TaskStatus;
-        dueDate?: string | null; // ISO string or null
+        dueDate?: string | null;
         caseNumber: string;
     }): Promise<Task> {
         const { data } = await axios.post(`${BASE_URL}/tasks`, payload, {
@@ -39,9 +40,15 @@ export class TasksApi {
     }
 
     async updateStatus(id: number, status: TaskStatus): Promise<Task> {
-        const { data } = await axios.patch(`${BASE_URL}/tasks/${id}/status`, { status }, {
-            headers: { 'Content-Type': 'application/json' },
-        });
+        const { data } = await axios.patch(
+            `${BASE_URL}/tasks/${id}/status`,
+            { status },
+            { headers: { 'Content-Type': 'application/json' } }
+        );
         return data;
+    }
+
+    async delete(id: number): Promise<void> {
+        await axios.delete(`${BASE_URL}/tasks/${id}`);
     }
 }
