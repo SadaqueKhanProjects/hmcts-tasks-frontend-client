@@ -21,18 +21,31 @@ export default function (app: Application): void {
         try {
             const tasks = await api.getAll();
 
-            // Sort by dueDate ascending; entries without dueDate go to the bottom
+            // Sort tasks by due date (earliest first); no due date appears last
             tasks.sort((a, b) => {
                 const ta = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
                 const tb = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
                 return ta - tb;
             });
 
-            // add a preformatted field for the template
-            const viewTasks = tasks.map(t => ({
-                ...t,
-                displayDue: formatLocal(t.dueDate) ?? '—',
-            }));
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Reset to start of day
+
+            // Add preformatted due date and dueToday flag
+            const viewTasks = tasks.map(t => {
+                let isDueToday = false;
+                if (t.dueDate) {
+                    const due = new Date(t.dueDate);
+                    due.setHours(0, 0, 0, 0);
+                    isDueToday = due.getTime() === today.getTime();
+                }
+
+                return {
+                    ...t,
+                    displayDue: formatLocal(t.dueDate) ?? '—',
+                    dueToday: isDueToday
+                };
+            });
 
             res.render('tasks.njk', {
                 title: 'Tasks',
@@ -42,7 +55,6 @@ export default function (app: Application): void {
                 deleted: req.query.deleted,
             });
         } catch (e) {
-            // eslint-disable-next-line no-console
             console.error(e);
             res.status(500).render('error.njk', { message: 'Unable to load tasks' });
         }

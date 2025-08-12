@@ -8,12 +8,18 @@
 {% block content %}
   {% include "includes/flash-banner.njk" %}
 
-  <div style="display: flex; justify-content: space-between; align-items: center;">
-    <h1 class="govuk-heading-xl govuk-!-margin-bottom-2" style="margin-right: auto;">Tasks</h1>
-    <a class="govuk-button" href="/tasks/new" data-module="govuk-button" style="margin-left: auto;">Create a task</a>
+  <div class="govuk-grid-row govuk-!-margin-bottom-4">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-xl govuk-!-margin-bottom-2">Tasks</h1>
+      <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
+    </div>
+    <div class="govuk-grid-column-one-third" style="display:flex; align-items:flex-start; justify-content:flex-end;">
+      {{ govukButton({
+        text: "Create a task",
+        href: "/tasks/new"
+      }) }}
+    </div>
   </div>
-
-  <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
 
   {% if tasks and tasks.length %}
     {% for t in tasks %}
@@ -24,25 +30,37 @@
       {% else %}
         {% set tagClass = "govuk-tag--grey" %}
       {% endif %}
+
+      {% set dueCellHtml %}
+        {% if t.dueToday %}
+          <span style="background-color:#d4351c; color:#fff; padding:2px 6px; border-radius:4px;">
+            {{ t.displayDue }}
+          </span>
+        {% else %}
+          {{ t.displayDue }}
+        {% endif %}
+      {% endset %}
+
+      {# Build rows array separately to avoid parseAggregate error #}
+      {% set rows = [
+        { "key": { "text": "Title" },       "value": { "text": t.title } },
+        { "key": { "text": "Case number" }, "value": { "text": t.caseNumber or "—" } },
+        { "key": { "text": "Due" },         "value": { "html": dueCellHtml | safe } },
+        { "key": { "text": "Status" },      "value": { "html": govukTag({ text: t.status, classes: tagClass }) } },
+        { "key": { "text": "Actions" },     "value": { "html":
+            '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
+            ' &nbsp;|&nbsp; ' ~
+            '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
+            ' &nbsp;|&nbsp; ' ~
+            '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
+        } }
+      ] %}
+
       <div class="govuk-!-margin-bottom-4"
-           style="border:1px solid #505a5f; padding:16px; border-radius:6px;">
+           style="border:2px solid #0b0c0c; padding:16px; border-radius:6px;">
         {{ govukSummaryList({
           classes: "govuk-!-margin-bottom-0",
-          rows: [
-            { key: { text: "Title" },       value: { text: t.title } },
-            { key: { text: "Case number" }, value: { text: t.caseNumber or "—" } },
-            { key: { text: "Due" },         value: { text: t.displayDue } },
-            { key: { text: "Status" },      value: { html: govukTag({ text: t.status, classes: tagClass }) } },
-            { key: { text: "Actions" },     value: {
-                html:
-                  '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
-                  ' &nbsp;|&nbsp; ' ~
-                  '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
-                  ' &nbsp;|&nbsp; ' ~
-                  '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
-              }
-            }
-          ]
+          rows: rows
         }) }}
       </div>
     {% endfor %}
