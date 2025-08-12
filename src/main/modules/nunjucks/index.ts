@@ -1,38 +1,37 @@
-// src/main/modules/nunjucks/index.ts
 import path from 'path';
 import nunjucks from 'nunjucks';
-import type express from 'express';
+import { Express } from 'express';
 
 export class Nunjucks {
-  private readonly isDev: boolean;
+  constructor(private readonly isDev: boolean) { }
 
-  constructor(isDev: boolean) {
-    this.isDev = isDev;
-  }
-
-  enableFor(app: express.Application) {
-    // App views
-    const viewsPath = path.join(__dirname, '..', '..', 'views');
-
-    // GOV.UK Frontend (v4.x) locations
-    const govukRoot = path.join(__dirname, '..', '..', '..', 'node_modules', 'govuk-frontend');
-    const govukPath = path.join(govukRoot, 'govuk');
-    const govukComponentsPath = path.join(govukPath, 'components');
-
-    // Configure Nunjucks with all search paths so macros/templates always resolve
-    const env = nunjucks.configure(
-      [viewsPath, govukComponentsPath, govukPath, govukRoot],
-      {
-        autoescape: true,
-        express: app,
-        watch: this.isDev,
-        noCache: this.isDev,
-      }
-    );
-
-    // Use .njk
+  enableFor(app: Express): void {
     app.set('view engine', 'njk');
 
-    return env;
+    const viewsDir = path.join(__dirname, '..', 'views');
+    const govukRoot = path.join(process.cwd(), 'node_modules', 'govuk-frontend');
+    const govukDir = path.join(govukRoot, 'govuk');                // e.g. node_modules/govuk-frontend/govuk
+    const govukComponents = path.join(govukDir, 'components');     // e.g. .../govuk/components
+
+    const loaders: nunjucks.ILoader[] = [
+      // Your app views
+      new nunjucks.FileSystemLoader(viewsDir, { noCache: this.isDev }),
+      new nunjucks.FileSystemLoader(path.join(viewsDir, 'govuk'), { noCache: this.isDev }),
+
+      // GOV.UK component and root folders
+      new nunjucks.FileSystemLoader(govukComponents, { noCache: this.isDev }),
+      new nunjucks.FileSystemLoader(govukDir, { noCache: this.isDev }),
+
+      // (Optional) allow absolute imports starting with node_modules/
+      new nunjucks.FileSystemLoader(path.join(process.cwd(), 'node_modules'), { noCache: this.isDev }),
+    ];
+
+    const env = new nunjucks.Environment(loaders, {
+      autoescape: true,
+      noCache: this.isDev,
+      throwOnUndefined: false,
+    });
+
+    env.express(app);
   }
 }

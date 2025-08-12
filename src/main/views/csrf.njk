@@ -1,0 +1,4 @@
+{# src/main/views/csrf.njk #}
+{% if csrfToken %}
+<input type="hidden" name="_csrf" value="{{ csrfToken }}">
+{% endif %}

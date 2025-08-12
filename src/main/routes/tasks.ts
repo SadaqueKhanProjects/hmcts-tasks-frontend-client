@@ -10,7 +10,7 @@ export default function (app: Application): void {
     app.get('/tasks', async (_req: Request, res: Response) => {
         try {
             const tasks = await api.getAll();
-            res.render('tasks.njk', { title: 'Tasks', tasks });
+            res.render('tasks.njk', { title: 'Tasks', tasks, created: _req.query.created, updated: _req.query.updated });
         } catch (e) {
             // eslint-disable-next-line no-console
             console.error(e);
@@ -57,7 +57,7 @@ export default function (app: Application): void {
                 caseNumber: caseNumber.trim(),
             });
 
-            res.redirect('/tasks');
+            res.redirect('/tasks?created=1');
         } catch (e) {
             // eslint-disable-next-line no-console
             console.error(e);
@@ -66,6 +66,57 @@ export default function (app: Application): void {
                 statuses: STATUSES,
                 form: { title, description, status, dueDate, caseNumber },
                 errors: { global: 'Something went wrong creating the task. Try again.' },
+            });
+        }
+    });
+
+    // EDIT (form) — only status for now
+    app.get('/tasks/:id/edit', async (req: Request, res: Response) => {
+        try {
+            const id = Number(req.params.id);
+            const task = await api.getById(id);
+            res.render('task-edit.njk', { title: 'Update task status', task, statuses: STATUSES, errors: {} });
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error(e);
+            res.status(404).render('error.njk', { message: 'Task not found' });
+        }
+    });
+
+    // EDIT (submit) — only status for now
+    app.post('/tasks/:id/edit', async (req: Request, res: Response) => {
+        const id = Number(req.params.id);
+        const { status } = req.body || {};
+        const errors: Record<string, string> = {};
+
+        if (!STATUSES.includes(status)) errors.status = 'Choose a valid status';
+
+        if (Object.keys(errors).length) {
+            try {
+                const task = await api.getById(id);
+                return res.status(400).render('task-edit.njk', {
+                    title: 'Update task status',
+                    task,
+                    statuses: STATUSES,
+                    errors,
+                });
+            } catch {
+                return res.status(404).render('error.njk', { message: 'Task not found' });
+            }
+        }
+
+        try {
+            await api.updateStatus(id, status);
+            res.redirect('/tasks?updated=1');
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error(e);
+            const task = await api.getById(id).catch(() => null);
+            res.status(500).render('task-edit.njk', {
+                title: 'Update task status',
+                task,
+                statuses: STATUSES,
+                errors: { global: 'Something went wrong updating the status. Try again.' },
             });
         }
     });

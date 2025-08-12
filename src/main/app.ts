@@ -7,6 +7,8 @@ import { Nunjucks } from './modules/nunjucks';
 
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
+// CSRF protection
+import csrf from 'csurf';
 import express from 'express';
 import { glob } from 'glob';
 
@@ -31,6 +33,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+// Enable CSRF protection for all POST routes
+app.use(csrf({ cookie: true }));
+
+// Make CSRF token available to all Nunjucks templates
+app.use((req, res, next) => {
+  res.locals.csrfToken = req.csrfToken();
+  next();
+});
 app.use((req, res, next) => {
   res.setHeader('Cache-Control', 'no-cache, max-age=0, must-revalidate, no-store');
   next();

@@ -1,0 +1,74 @@
+{% extends "layout.njk" %}
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk/components/select/macro.njk" import govukSelect %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+
+{% set pageTitle = "Update task status" %}
+
+{% block beforeContent %}
+  {{ govukBackLink({ text: "Back", href: "/tasks" }) }}
+{% endblock %}
+
+{% block content %}
+
+  {% if updated %}
+    <div class="govuk-notification-banner govuk-notification-banner--success" role="region" aria-labelledby="updated-title" data-module="govuk-notification-banner">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="updated-title">Success</h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading">Task status updated successfully.</p>
+      </div>
+    </div>
+  {% endif %}
+
+  {% if errors and errors.global %}
+    {{ govukErrorSummary({
+      titleText: "There is a problem",
+      errorList: [{ text: errors.global }]
+    }) }}
+  {% endif %}
+
+  <h1 class="govuk-heading-l">Update task status</h1>
+  <p class="govuk-body">Only the status can be updated on this page. Other fields are read-only for now.</p>
+
+  <dl class="govuk-summary-list govuk-!-margin-bottom-6">
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Title</dt>
+      <dd class="govuk-summary-list__value">{{ task.title }}</dd>
+    </div>
+    <div class="govuk-summary-list__row">
+      <dt class="govuk-summary-list__key">Case number</dt>
+      <dd class="govuk-summary-list__value">{{ task.caseNumber }}</dd>
+    </div>
+  </dl>
+
+  {# Precompute selections and error object to avoid inline ternaries in macro params #}
+  {% set isPending = task.status == "PENDING" %}
+  {% set isInProgress = task.status == "IN_PROGRESS" %}
+  {% set isCompleted = task.status == "COMPLETED" %}
+
+  {% if errors and errors.status %}
+    {% set statusError = { "text": errors.status } %}
+  {% endif %}
+
+  <form action="/tasks/{{ task.id }}/edit" method="post" novalidate>
+    {% include "csrf.njk" %}
+
+    {{ govukSelect({
+      id: "status",
+      name: "status",
+      label: { text: "Status", classes: "govuk-label--m" },
+      value: task.status,
+      items: [
+        { value: "PENDING", text: "Pending", selected: isPending },
+        { value: "IN_PROGRESS", text: "In progress", selected: isInProgress },
+        { value: "COMPLETED", text: "Completed", selected: isCompleted }
+      ],
+      errorMessage: statusError
+    }) }}
+
+    {{ govukButton({ text: "Save status" }) }}
+  </form>
+{% endblock %}
