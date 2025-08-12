@@ -21,6 +21,13 @@ export default function (app: Application): void {
         try {
             const tasks = await api.getAll();
 
+            // Sort by dueDate ascending; entries without dueDate go to the bottom
+            tasks.sort((a, b) => {
+                const ta = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                const tb = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                return ta - tb;
+            });
+
             // add a preformatted field for the template
             const viewTasks = tasks.map(t => ({
                 ...t,
@@ -35,6 +42,7 @@ export default function (app: Application): void {
                 deleted: req.query.deleted,
             });
         } catch (e) {
+            // eslint-disable-next-line no-console
             console.error(e);
             res.status(500).render('error.njk', { message: 'Unable to load tasks' });
         }
