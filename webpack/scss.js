@@ -4,41 +4,37 @@ const devMode = process.env.NODE_ENV !== 'production';
 const fileNameSuffix = devMode ? '-dev' : '.[contenthash]';
 const filename = `[name]${fileNameSuffix}.css`;
 
-const miniCss = new MiniCssExtractPlugin({
-  // Options similar to the same options in webpackOptions.output
-  // both options are optional
-  filename,
-  chunkFilename: '[id].css',
-});
-
 module.exports = {
   rules: [
     {
-      test: /\.scss$/,
+      test: /\.s?css$/,
       use: [
-        'style-loader',
+        // Extract CSS to a file (use this in dev & prod for predictable output)
         {
           loader: MiniCssExtractPlugin.loader,
-          options: {
-            esModule: false,
-          },
+          options: { esModule: false },
         },
         {
           loader: 'css-loader',
           options: {
             url: false,
+            sourceMap: devMode,
           },
         },
         {
           loader: 'sass-loader',
           options: {
-            sassOptions: {
-              quietDeps: true,
-            },
+            sourceMap: devMode,
+            sassOptions: { quietDeps: true },
           },
         },
       ],
     },
   ],
-  plugins: [miniCss],
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename,
+      chunkFilename: '[id].css',
+    }),
+  ],
 };

@@ -40,9 +40,17 @@ export default function (app: Application): void {
         const { title, description, status, dueDate, caseNumber } = req.body || {};
         const errors: Record<string, string> = {};
 
+        // Basic validation
         if (!title?.trim()) errors.title = 'Enter a title';
         if (!caseNumber?.trim()) errors.caseNumber = 'Enter a case number';
         if (!STATUSES.includes(status)) errors.status = 'Choose a valid status';
+
+        // New: word-limit validation for description (max 500 words)
+        const desc = typeof description === 'string' ? description : '';
+        const wordCount = desc.trim() === '' ? 0 : desc.trim().split(/\s+/).length;
+        if (wordCount > 500) {
+            errors.description = `Keep the description to 500 words or fewer (you entered ${wordCount}).`;
+        }
 
         if (Object.keys(errors).length) {
             return res.status(400).render('task-new.njk', {
@@ -58,7 +66,7 @@ export default function (app: Application): void {
 
             await api.create({
                 title: title.trim(),
-                description: description?.trim() || null,
+                description: desc.trim() || null,
                 status,
                 dueDate: isoDue,
                 caseNumber: caseNumber.trim(),

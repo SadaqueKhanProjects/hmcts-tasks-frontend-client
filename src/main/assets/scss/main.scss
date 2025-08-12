@@ -3,3 +3,13 @@
 .govuk-heading-xl {
     margin-bottom: 10px;
 }
+
+/* Make the description box comfortably tall but not overwhelming */
+.app-textarea--tall textarea.govuk-textarea {
+    min-height: 18rem;
+    /* ~288px */
+    max-height: 28rem;
+    /* keep it reasonable */
+    resize: vertical;
+    /* let users expand if needed */
+}
