@@ -1,44 +1,75 @@
-{# Flash banner component for showing success/error/info messages #}
-{% if created %}
-  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
+{# src/main/views/includes/flash-banner.njk #}
+{# ----------------------------------------------------------
+   Universal flash banners:
+   - success:  created / updated / deleted / success (string|array)
+   - info:     info (string|array)
+   - error:    error (string|array) OR errors.global OR message
+   ---------------------------------------------------------- #}
+
+{# ---------- Build success text ---------- #}
+{% set _success =
+      success
+   or (created and 'Task created successfully')
+   or (updated and 'Task updated successfully')
+   or (deleted and 'Task deleted successfully')
+%}
+
+{% if _success %}
+  <div class="govuk-notification-banner govuk-notification-banner--success" role="region" aria-labelledby="banner-success-title" data-module="govuk-notification-banner">
     <div class="govuk-notification-banner__header">
-      <h2 class="govuk-notification-banner__title">Success</h2>
+      <h2 class="govuk-notification-banner__title" id="banner-success-title">Success</h2>
     </div>
     <div class="govuk-notification-banner__content">
-      <p class="govuk-notification-banner__heading">Task created successfully</p>
+      {% if _success | string and _success is string %}
+        <p class="govuk-notification-banner__heading">{{ _success }}</p>
+      {% else %}
+        <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+          {% for msg in _success %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
   </div>
 {% endif %}
 
-{% if updated %}
-  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
+{# ---------- Info banner (neutral) ---------- #}
+{% if info %}
+  <div class="govuk-notification-banner" role="region" aria-labelledby="banner-info-title" data-module="govuk-notification-banner">
     <div class="govuk-notification-banner__header">
-      <h2 class="govuk-notification-banner__title">Success</h2>
+      <h2 class="govuk-notification-banner__title" id="banner-info-title">Notice</h2>
     </div>
     <div class="govuk-notification-banner__content">
-      <p class="govuk-notification-banner__heading">Task updated successfully</p>
+      {% if info is string %}
+        <p class="govuk-notification-banner__heading">{{ info }}</p>
+      {% else %}
+        <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+          {% for msg in info %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
   </div>
 {% endif %}
 
-{% if deleted %}
-  <div class="govuk-notification-banner govuk-notification-banner--success" role="alert">
+{# ---------- Error banner ---------- #}
+{% set _error = error or (errors and errors.global) or message %}
+{% if _error %}
+  <div class="govuk-notification-banner govuk-notification-banner--error" role="region" aria-labelledby="banner-error-title" data-module="govuk-notification-banner">
     <div class="govuk-notification-banner__header">
-      <h2 class="govuk-notification-banner__title">Success</h2>
+      <h2 class="govuk-notification-banner__title" id="banner-error-title">Error</h2>
     </div>
     <div class="govuk-notification-banner__content">
-      <p class="govuk-notification-banner__heading">Task deleted successfully</p>
-    </div>
-  </div>
-{% endif %}
-
-{% if errors and errors.global %}
-  <div class="govuk-notification-banner govuk-notification-banner--error" role="alert">
-    <div class="govuk-notification-banner__header">
-      <h2 class="govuk-notification-banner__title">Error</h2>
-    </div>
-    <div class="govuk-notification-banner__content">
-      <p class="govuk-notification-banner__heading">{{ errors.global }}</p>
+      {% if _error is string %}
+        <p class="govuk-notification-banner__heading">{{ _error }}</p>
+      {% else %}
+        <ul class="govuk-list govuk-list--bullet govuk-!-margin-bottom-0">
+          {% for msg in _error %}
+            <li>{{ msg }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     </div>
   </div>
 {% endif %}
