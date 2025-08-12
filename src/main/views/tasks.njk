@@ -1,7 +1,8 @@
 {% extends "layout.njk" %}
-{% from "govuk/components/tag/macro.njk" import govukTag %}
+{% from "govuk/components/tag/macro.njk"   import govukTag %}
 {% from "govuk/components/summary-list/macro.njk" import govukSummaryList %}
 {% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/tabs/macro.njk"   import govukTabs %}
 
 {% set pageTitle = "Tasks" %}
 
@@ -14,57 +15,81 @@
       <p class="govuk-body">Manage simple case tasks: create, view, update status, and delete.</p>
     </div>
     <div class="govuk-grid-column-one-third" style="display:flex; align-items:flex-start; justify-content:flex-end;">
-      {{ govukButton({
-        text: "Create a task",
-        href: "/tasks/new"
-      }) }}
+      {{ govukButton({ text: "Create a task", href: "/tasks/new" }) }}
     </div>
   </div>
 
-  {% if tasks and tasks.length %}
-    {% for t in tasks %}
-      {% if t.status == "COMPLETED" or t.status == "DONE" %}
-        {% set tagClass = "govuk-tag--green" %}
-      {% elif t.status == "IN_PROGRESS" %}
-        {% set tagClass = "govuk-tag--blue" %}
-      {% else %}
-        {% set tagClass = "govuk-tag--grey" %}
-      {% endif %}
+  {# Reusable card macro for a single task #}
+  {% macro taskCard(t) %}
+    {% set tagClass = "govuk-tag--grey" %}
+    {% if t.status == "COMPLETED" or t.status == "DONE" %}
+      {% set tagClass = "govuk-tag--green" %}
+    {% elif t.status == "IN_PROGRESS" %}
+      {% set tagClass = "govuk-tag--blue" %}
+    {% endif %}
 
-      {% set dueCellHtml %}
-        {% if t.dueToday %}
-          <span style="background-color:#d4351c; color:#fff; padding:2px 6px; border-radius:4px;">
-            {{ t.displayDue }}
-          </span>
-        {% else %}
+    {% set dueCellHtml %}
+      {% if t.dueToday %}
+        <span style="background-color:#d4351c; color:#fff; padding:2px 6px; border-radius:4px;">
           {{ t.displayDue }}
-        {% endif %}
-      {% endset %}
+        </span>
+      {% else %}
+        {{ t.displayDue }}
+      {% endif %}
+    {% endset %}
 
-      {# Build rows array separately to avoid parseAggregate error #}
-      {% set rows = [
-        { "key": { "text": "Title" },       "value": { "text": t.title } },
-        { "key": { "text": "Case number" }, "value": { "text": t.caseNumber or "—" } },
-        { "key": { "text": "Due" },         "value": { "html": dueCellHtml | safe } },
-        { "key": { "text": "Status" },      "value": { "html": govukTag({ text: t.status, classes: tagClass }) } },
-        { "key": { "text": "Actions" },     "value": { "html":
-            '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
-            ' &nbsp;|&nbsp; ' ~
-            '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
-            ' &nbsp;|&nbsp; ' ~
-            '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
-        } }
-      ] %}
+    {% set rows = [
+      { "key": { "text": "Title" },       "value": { "text": t.title } },
+      { "key": { "text": "Case number" }, "value": { "text": t.caseNumber or "—" } },
+      { "key": { "text": "Due" },         "value": { "html": dueCellHtml | safe } },
+      { "key": { "text": "Status" },      "value": { "html": govukTag({ text: t.status, classes: tagClass }) } },
+      { "key": { "text": "Actions" },     "value": { "html":
+        '<a class="govuk-link" href="/tasks/' ~ t.id ~ '">View</a>' ~
+        ' &nbsp;|&nbsp; ' ~
+        '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/edit">Edit</a>' ~
+        ' &nbsp;|&nbsp; ' ~
+        '<a class="govuk-link" href="/tasks/' ~ t.id ~ '/delete">Delete</a>'
+      } }
+    ] %}
 
-      <div class="govuk-!-margin-bottom-4"
-           style="border:2px solid #0b0c0c; padding:16px; border-radius:6px;">
-        {{ govukSummaryList({
-          classes: "govuk-!-margin-bottom-0",
-          rows: rows
-        }) }}
-      </div>
+    <div class="govuk-!-margin-bottom-4" style="border:2px solid #0b0c0c; padding:16px; border-radius:6px;">
+      {{ govukSummaryList({ classes: "govuk-!-margin-bottom-0", rows: rows }) }}
+    </div>
+  {% endmacro %}
+
+  {# Build tab HTML strings without inline ternaries #}
+  {% set pendingHtml = "" %}
+  {% if tasksPending and tasksPending.length %}
+    {% for t in tasksPending %}
+      {% set pendingHtml = pendingHtml + taskCard(t) %}
     {% endfor %}
   {% else %}
-    <p class="govuk-body">No tasks found.</p>
+    {% set pendingHtml = '<p class="govuk-body">No pending tasks.</p>' %}
   {% endif %}
+
+  {% set inProgressHtml = "" %}
+  {% if tasksInProgress and tasksInProgress.length %}
+    {% for t in tasksInProgress %}
+      {% set inProgressHtml = inProgressHtml + taskCard(t) %}
+    {% endfor %}
+  {% else %}
+    {% set inProgressHtml = '<p class="govuk-body">No in-progress tasks.</p>' %}
+  {% endif %}
+
+  {% set completedHtml = "" %}
+  {% if tasksCompleted and tasksCompleted.length %}
+    {% for t in tasksCompleted %}
+      {% set completedHtml = completedHtml + taskCard(t) %}
+    {% endfor %}
+  {% else %}
+    {% set completedHtml = '<p class="govuk-body">No completed tasks.</p>' %}
+  {% endif %}
+
+  {% set tabsItems = [
+    { "label": "Pending",     "id": "pending",     "panel": { "html": pendingHtml | safe } },
+    { "label": "In progress", "id": "in-progress", "panel": { "html": inProgressHtml | safe } },
+    { "label": "Completed",   "id": "completed",   "panel": { "html": completedHtml | safe } }
+  ] %}
+
+  {{ govukTabs({ items: tabsItems }) }}
 {% endblock %}

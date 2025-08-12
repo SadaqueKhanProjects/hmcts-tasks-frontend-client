@@ -21,40 +21,47 @@ export default function (app: Application): void {
         try {
             const tasks = await api.getAll();
 
-            // Sort tasks by due date (earliest first); no due date appears last
+            // Sort by due date (earliest first); items without a due date at the end
             tasks.sort((a, b) => {
                 const ta = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
                 const tb = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
                 return ta - tb;
             });
 
+            // Compute display fields once
             const today = new Date();
-            today.setHours(0, 0, 0, 0); // Reset to start of day
+            today.setHours(0, 0, 0, 0);
 
-            // Add preformatted due date and dueToday flag
             const viewTasks = tasks.map(t => {
-                let isDueToday = false;
+                let dueToday = false;
                 if (t.dueDate) {
-                    const due = new Date(t.dueDate);
-                    due.setHours(0, 0, 0, 0);
-                    isDueToday = due.getTime() === today.getTime();
+                    const d = new Date(t.dueDate);
+                    d.setHours(0, 0, 0, 0);
+                    dueToday = d.getTime() === today.getTime();
                 }
-
                 return {
                     ...t,
                     displayDue: formatLocal(t.dueDate) ?? '—',
-                    dueToday: isDueToday
+                    dueToday,
                 };
             });
 
+            // Group by status for tabs
+            const tasksPending = viewTasks.filter(t => t.status === 'PENDING');
+            const tasksInProgress = viewTasks.filter(t => t.status === 'IN_PROGRESS');
+            const tasksCompleted = viewTasks.filter(t => t.status === 'COMPLETED');
+
             res.render('tasks.njk', {
                 title: 'Tasks',
-                tasks: viewTasks,
+                tasksPending,
+                tasksInProgress,
+                tasksCompleted,
                 created: req.query.created,
                 updated: req.query.updated,
                 deleted: req.query.deleted,
             });
         } catch (e) {
+            // eslint-disable-next-line no-console
             console.error(e);
             res.status(500).render('error.njk', { message: 'Unable to load tasks' });
         }
