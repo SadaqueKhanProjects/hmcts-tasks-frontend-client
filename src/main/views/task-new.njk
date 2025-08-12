@@ -1,0 +1,45 @@
+{% extends "layout.njk" %}
+
+{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
+{% from "govuk/components/input/macro.njk" import govukInput %}
+{% from "govuk/components/button/macro.njk" import govukButton %}
+{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
+
+{% block pageTitle %}
+  Create a new task
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukBackLink({
+    text: "Back",
+    href: "/tasks"
+  }) }}
+{% endblock %}
+
+{% block content %}
+  <h1 class="govuk-heading-l">Create a new task</h1>
+
+  <form method="post" action="/tasks/new">
+    {{ govukInput({
+      label: {
+        text: "Task title",
+        classes: "govuk-label--m"
+      },
+      id: "title",
+      name: "title"
+    }) }}
+
+    {{ govukTextarea({
+      label: {
+        text: "Task description",
+        classes: "govuk-label--m"
+      },
+      id: "description",
+      name: "description"
+    }) }}
+
+    {{ govukButton({
+      text: "Create task"
+    }) }}
+  </form>
+{% endblock %}

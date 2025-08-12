@@ -1,14 +1,72 @@
-import { Application } from 'express';
-import axios from 'axios';
+import { Application, Request, Response } from 'express';
+import { TasksApi, TaskStatus } from '../tasksApi';
+
+const STATUSES: TaskStatus[] = ['PENDING', 'IN_PROGRESS', 'COMPLETED'];
 
 export default function (app: Application): void {
-    app.get('/tasks', async (req, res) => {
+    const api = new TasksApi();
+
+    // LIST
+    app.get('/tasks', async (_req: Request, res: Response) => {
         try {
-            const response = await axios.get('http://localhost:4000/tasks'); // backend API
-            res.render('tasks', { tasks: response.data, title: 'Tasks' });
-        } catch (error) {
-            console.error('Error fetching tasks:', error);
-            res.render('tasks', { tasks: [], title: 'Tasks' });
+            const tasks = await api.getAll();
+            res.render('tasks.njk', { title: 'Tasks', tasks });
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error(e);
+            res.status(500).render('error.njk', { message: 'Unable to load tasks' });
+        }
+    });
+
+    // NEW (form)
+    app.get('/tasks/new', (_req: Request, res: Response) => {
+        res.render('task-new.njk', {
+            title: 'Create a task',
+            statuses: STATUSES,
+            form: { title: '', description: '', status: 'PENDING', dueDate: '', caseNumber: '' },
+            errors: {},
+        });
+    });
+
+    // CREATE (submit)
+    app.post('/tasks', async (req: Request, res: Response) => {
+        const { title, description, status, dueDate, caseNumber } = req.body || {};
+        const errors: Record<string, string> = {};
+
+        if (!title?.trim()) errors.title = 'Enter a title';
+        if (!caseNumber?.trim()) errors.caseNumber = 'Enter a case number';
+        if (!STATUSES.includes(status)) errors.status = 'Choose a valid status';
+
+        if (Object.keys(errors).length) {
+            return res.status(400).render('task-new.njk', {
+                title: 'Create a task',
+                statuses: STATUSES,
+                form: { title, description, status, dueDate, caseNumber },
+                errors,
+            });
+        }
+
+        try {
+            const isoDue = dueDate ? new Date(dueDate).toISOString() : null;
+
+            await api.create({
+                title: title.trim(),
+                description: description?.trim() || null,
+                status,
+                dueDate: isoDue,
+                caseNumber: caseNumber.trim(),
+            });
+
+            res.redirect('/tasks');
+        } catch (e) {
+            // eslint-disable-next-line no-console
+            console.error(e);
+            res.status(500).render('task-new.njk', {
+                title: 'Create a task',
+                statuses: STATUSES,
+                form: { title, description, status, dueDate, caseNumber },
+                errors: { global: 'Something went wrong creating the task. Try again.' },
+            });
         }
     });
 }
