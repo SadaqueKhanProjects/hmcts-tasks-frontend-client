@@ -1,45 +1,79 @@
 {% extends "layout.njk" %}
 
-{% from "govuk/components/back-link/macro.njk" import govukBackLink %}
-{% from "govuk/components/input/macro.njk" import govukInput %}
-{% from "govuk/components/button/macro.njk" import govukButton %}
-{% from "govuk/components/textarea/macro.njk" import govukTextarea %}
-
-{% block pageTitle %}
-  Create a new task
-{% endblock %}
-
-{% block beforeContent %}
-  {{ govukBackLink({
-    text: "Back",
-    href: "/tasks"
-  }) }}
-{% endblock %}
+{% block pageTitle %}Create a task{% endblock %}
 
 {% block content %}
-  <h1 class="govuk-heading-l">Create a new task</h1>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
 
-  <form method="post" action="/tasks/new">
-    {{ govukInput({
-      label: {
-        text: "Task title",
-        classes: "govuk-label--m"
-      },
-      id: "title",
-      name: "title"
-    }) }}
+    {% if created %}
+    <div class="govuk-notification-banner" role="region" aria-labelledby="govuk-notification-banner-title" data-module="govuk-notification-banner">
+      <div class="govuk-notification-banner__header">
+        <h2 class="govuk-notification-banner__title" id="govuk-notification-banner-title">Success</h2>
+      </div>
+      <div class="govuk-notification-banner__content">
+        <p class="govuk-notification-banner__heading">Task created successfully.</p>
+      </div>
+    </div>
+    {% endif %}
 
-    {{ govukTextarea({
-      label: {
-        text: "Task description",
-        classes: "govuk-label--m"
-      },
-      id: "description",
-      name: "description"
-    }) }}
+    <span class="govuk-caption-l">HMCTS Tasks</span>
+    <h1 class="govuk-heading-l">Create a task</h1>
 
-    {{ govukButton({
-      text: "Create task"
-    }) }}
-  </form>
+    {% if errors.global %}
+      <div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" data-module="govuk-error-summary">
+        <h2 class="govuk-error-summary__title" id="error-summary-title">There is a problem</h2>
+        <div class="govuk-error-summary__body">
+          <p>{{ errors.global }}</p>
+        </div>
+      </div>
+    {% endif %}
+
+    <form method="post" action="/tasks" novalidate>
+      {% include "csrf.njk" ignore missing %}
+
+      <div class="govuk-form-group {% if errors.title %}govuk-form-group--error{% endif %}">
+        <label class="govuk-label" for="title">Title</label>
+        {% if errors.title %}
+          <p class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.title }}</p>
+        {% endif %}
+        <input class="govuk-input" id="title" name="title" type="text" value="{{ form.title | default('') }}">
+      </div>
+
+      <div class="govuk-form-group">
+        <label class="govuk-label" for="description">Description (optional)</label>
+        <textarea class="govuk-textarea" id="description" name="description">{{ form.description | default('') }}</textarea>
+      </div>
+
+      <div class="govuk-form-group {% if errors.caseNumber %}govuk-form-group--error{% endif %}">
+        <label class="govuk-label" for="caseNumber">Case number</label>
+        {% if errors.caseNumber %}
+          <p class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.caseNumber }}</p>
+        {% endif %}
+        <input class="govuk-input" id="caseNumber" name="caseNumber" type="text" value="{{ form.caseNumber | default('') }}">
+      </div>
+
+      <div class="govuk-form-group {% if errors.status %}govuk-form-group--error{% endif %}">
+        <label class="govuk-label" for="status">Status</label>
+        {% if errors.status %}
+          <p class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> {{ errors.status }}</p>
+        {% endif %}
+        <select class="govuk-select" id="status" name="status">
+          {% for s in statuses %}
+            <option value="{{ s }}" {% if form.status == s %}selected{% endif %}>{{ s | replace("_", " ") }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="govuk-form-group">
+        <label class="govuk-label" for="dueDate">Due date/time (optional)</label>
+        <input class="govuk-input" id="dueDate" name="dueDate" type="datetime-local" value="{{ form.dueDate | default('') }}">
+      </div>
+
+      <button class="govuk-button" data-module="govuk-button" type="submit">Create task</button>
+      <a class="govuk-link" href="/tasks">Cancel</a>
+    </form>
+
+  </div>
+</div>
 {% endblock %}
